@@ -126,3 +126,24 @@ async def buscar_codigo(file: UploadFile = File(...), db: Session = Depends(get_
     return resultados
 
 
+@router.get("/buscar-cliente/", response_model=ClienteResponse, tags=['Buscar rif de Cliente'])
+async def search_rif(rif_contains: str, db: Session = Depends(get_db)):
+    """Busca el primer cliente cuyo RIF contenga el texto especificado."""
+    print(f"Buscando cliente con RIF que contiene: {rif_contains}")
+
+    # Realiza búsqueda en la base de datos
+    existing_cliente = db.query(Cliente).filter(Cliente.rif.like(f"%{rif_contains}%")).first()
+    print(existing_cliente)
+
+    if existing_cliente:
+        # Convertimos el UUID a string antes de devolverlo
+        return ClienteResponse(
+            uuid=str(existing_cliente.uuid),  # Conversión a str
+            odoo_id=existing_cliente.odoo_id,
+            rif=existing_cliente.rif,
+            cod_galac=existing_cliente.cod_galac,
+            nombre_cliente=existing_cliente.nombre_cliente
+        )
+    else:
+        # Devuelve un error 404 si no se encontraron clientes
+        raise HTTPException(status_code=404, detail="No se encontraron clientes con el RIF proporcionado.")

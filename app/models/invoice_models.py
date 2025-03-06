@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Date as SQLAlchemyDate, Float
+#from sqlalchemy import Column, Integer, String, Date as SQLAlchemyDate, Float
+from sqlalchemy import Column, String, Float, Date, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import declarative_base
 from pydantic import BaseModel, Field
@@ -7,6 +8,10 @@ from datetime import date
 import uuid
 
 Base = declarative_base()
+
+####################################################################################################################################
+                                    # - - - - - - - - - - MODELO CLIENTE - - - - - - - - - - #
+####################################################################################################################################
 
 class Cliente(Base):
     __tablename__ = "clientes"
@@ -33,13 +38,18 @@ class ClienteResponse(BaseModel):
     nombre_cliente: str
 
     class Config:  # Configurable a nivel de modelo
-        orm_mode = True  # Habilitar orm_mode para la conversión entre ORM y modelos Pydantic
+        from_attributes = True  # Habilitar para la conversión entre ORM y modelos Pydantic
+
+
+####################################################################################################################################
+                                    # - - - - - - - - - - MODELO FACTURA - - - - - - - - - - #
+####################################################################################################################################
 
 class Factura(Base):
     __tablename__ = "facturas"
 
     uuid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID auto-generado
-    fecha = Column(SQLAlchemyDate)
+    fecha = Column(Date)
     rif = Column(String)
     numero_control = Column(String, nullable=True)
     numero_factura = Column(String, nullable=True)
@@ -50,8 +60,8 @@ class Factura(Base):
     nota_de_credito = Column(String, nullable=True)
     tipo_de_operacion = Column(String, nullable=True)
     numero_documento = Column(String, nullable=True)
-    fecha_comprobante = Column(SQLAlchemyDate, nullable=True)
-    fecha_comprobante_retencion = Column(SQLAlchemyDate, nullable=True)
+    fecha_comprobante = Column(Date, nullable=True)
+    fecha_comprobante_retencion = Column(Date, nullable=True)
     total_ventas_con_iva = Column(String, nullable=True)
     ventas_internas_no_grabadas = Column(String, nullable=True)
     base_imponible_g = Column(Float, nullable=True)
@@ -69,8 +79,9 @@ class Factura(Base):
     iva_cta_tercero = Column(Float, nullable=True)
     odoo_id = Column(Integer, nullable=True)
 
+
 class FacturaBase(BaseModel):
-    uuid: str = Field(default_factory=lambda: str(uuid.uuid4()))  # UUID siempre generado
+    uuid: str = Field(default_factory=lambda: str(uuid.uuid4()))  
     fecha: date
     rif: str
     numero_control: Optional[str] = None
@@ -109,3 +120,71 @@ class FacturaResponse(FacturaBase):
 
     class Config:  # Clase Config dentro de FacturaResponse.
         orm_mode = True  # Habilitar orm_mode.
+
+
+####################################################################################################################################
+                                    # - - - - - - - - - - MODELO BORRADOR - - - - - - - - - - #
+####################################################################################################################################
+
+
+class Borrador(Base):
+    __tablename__ = "borradores"
+
+    uuid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID auto-generado
+    codigo_borrador = Column(String, nullable=True)  # Código del borrador
+    fecha = Column(Date, nullable=False)  # Fecha del borrador
+    codigo_galac = Column(String, nullable=True)  # Código galático, ajustado
+    vendedor = Column(String, nullable=True)  # Información del vendedor
+    observaciones = Column(String, nullable=True)  # Observaciones adicionales
+    monto_exento_descuento = Column(Float, nullable=True)  # Monto exento de descuento
+    base_imp_d_des = Column(Float, nullable=True)  # Base imponible de descuentos
+    total_renglones = Column(Float, nullable=True)  # Total de renglones
+    total_iva = Column(Float, nullable=True)  # Total de IVA
+    total_facturas = Column(Float, nullable=True)  # Total de facturas
+    por_desc = Column(Float, nullable=True)  # Porcentaje de descuento
+    status_factura = Column(String, nullable=True)  # Estado de la factura
+    tipo_documento = Column(String, nullable=True)  # Tipo de documento
+    usar_dir_fiscal = Column(String, nullable=True)  # Indica si se usa dirección fiscal
+
+
+    # Detalles del artículo
+    descripcion = Column(String, nullable=True)  # Descripción del artículo
+    cantidad = Column(Float, nullable=True)  # Cantidad de artículos
+    precio_sin_iva = Column(Float, nullable=True)  # Precio sin IVA
+    precio_con_iva = Column(Float, nullable=True)  # Precio con IVA
+
+    # Porcentaje de base
+    porcentaje_base = Column(Float, nullable=True)  # Porcentaje base aplicable
+ 
+
+class BorradorBase(BaseModel):
+    uuid: str = Field(default_factory=lambda: str(uuid.uuid4()))  # UUID siempre generado
+    fecha: date  # Fecha del borrador
+    codigo_borrador: Optional[str] = None  # Código del borrador
+    codigo_galac: Optional[str] = None  # Código galáctico
+    vendedor: Optional[str] = None  # Información del vendedor
+    observaciones: Optional[str] = None  # Observaciones
+    monto_exento_descuento: Optional[float] = None  # Monto exento de descuento
+    base_imp_d_des: Optional[float] = None  # Base imponible de descuentos
+    total_renglones: Optional[float] = None  # Total de renglones
+    total_iva: Optional[float] = None  # Total de IVA
+    total_facturas: Optional[float] = None  # Total de facturas
+    por_desc: Optional[float] = None  # Porcentaje de descuento
+    status_factura: Optional[str] = None  # Estado de la factura
+    tipo_documento: Optional[str] = None  # Tipo de documento
+    usar_dir_fiscal: Optional[str] = None  # Uso de dirección fiscal
+    descripcion: Optional[str] = None  # Descripción del artículo
+    cantidad: Optional[float] = None  # Cantidad de artículos
+    precio_sin_iva: Optional[float] = None  # Precio sin IVA
+    precio_con_iva: Optional[float] = None  # Precio con IVA
+    porcentaje_base: Optional[float] = None  # Porcentaje base aplicable
+
+
+class BorradorCreate(BorradorBase):
+    pass  # Sin UUID, ya que se genera automáticamente en la base de datos
+
+class BorradorResponse(BorradorBase):
+    uuid: str  # Se espera UUID en la respuesta
+
+    class Config:
+        orm_mode = True  # Habilitar orm_mode para compatibilidad con SQLAlchemy
