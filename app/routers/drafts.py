@@ -14,8 +14,6 @@ async def comprobar_borrador(
     codigo_galac: str,
     fecha: str,  # Supongo que la fecha se pasa como string. Puedes ajustarla si usas formato específico.
     observaciones: str,
-    total_facturas: float,
-    base_imp_d_desc: float,
     db: Session = Depends(get_db)
 ):
     # Construir la consulta para buscar el borrador con los parámetros proporcionados
@@ -23,9 +21,7 @@ async def comprobar_borrador(
         and_(
             Borrador.codigo_galac == codigo_galac,
             Borrador.fecha == fecha,  # Considera convertir 'fecha' a tipo Date si lo guardas así
-            Borrador.observaciones == observaciones,
-            Borrador.total_facturas == total_facturas,
-            Borrador.base_imp_d_des == base_imp_d_desc
+            Borrador.observaciones == observaciones
         )
     ).first()  # Usar .first() para obtener un único resultado o None
 
@@ -39,9 +35,7 @@ async def agregar_borrador(borrador: BorradorCreate, db: Session = Depends(get_d
     existing_borrador = db.query(Borrador).filter(
         Borrador.codigo_galac == borrador.codigo_galac,
         Borrador.fecha == borrador.fecha,
-        Borrador.observaciones == borrador.observaciones,
-        Borrador.total_facturas == borrador.total_facturas,
-        #Borrador.codigo_articulo == borrador.codigo_articulo
+        Borrador.observaciones == borrador.observaciones
     ).first()
 
     if existing_borrador:
